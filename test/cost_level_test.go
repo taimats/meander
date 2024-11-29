@@ -24,3 +24,21 @@ func TestCostValues(t *testing.T) {
 		assert.Equal(expec[i], costs[i])
 	}
 }
+
+func TestParseCost(t *testing.T) {
+	//Arrange
+	args := []string{"$", "$$", "$$$", "$$$$", "$$$$$"}
+	wants := []int{int(meander.Cost1), int(meander.Cost2), int(meander.Cost3), int(meander.Cost4), int(meander.Cost5)}
+	gots := []int{}
+	assert := assert.New(t)
+
+	//Act
+	for _, arg := range args {
+		gots = append(gots, int(meander.ParseCost(arg)))
+	}
+
+	//Assert
+	for i := 0; i < len(args); i++ {
+		assert.Equal(wants[i], gots[i])
+	}
+}
