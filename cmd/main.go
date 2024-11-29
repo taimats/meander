@@ -23,6 +23,11 @@ func main() {
 
 }
 
-func respond(w http.ResponseWriter, data any) error {
-	return json.NewEncoder(w).Encode(data)
+func respond(w http.ResponseWriter, data []any) error {
+	publicData := make([]any, len(data))
+
+	for i, d := range data {
+		publicData[i] = meander.Public(d)
+	}
+	return json.NewEncoder(w).Encode(publicData)
 }
