@@ -42,3 +42,42 @@ func TestParseCost(t *testing.T) {
 		assert.Equal(wants[i], gots[i])
 	}
 }
+
+func TestCostRangeString(t *testing.T) {
+	//Arange
+	tests := map[string]struct {
+		from    string
+		to      string
+		want    string
+		wantErr bool
+	}{
+		"正常系": {
+			from:    "$$",
+			to:      "$$$",
+			want:    "$$" + "..." + "$$$",
+			wantErr: false,
+		},
+		"エラー": {
+			from:    "$$$",
+			to:      "$$",
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	for n, tt := range tests {
+		t.Run(n, func(t *testing.T) {
+			//Arange
+			cr := CostRange{}
+
+			//Act
+			got, err := cr.String(tt.from, tt.to)
+
+			//Assert
+			if tt.wantErr {
+				assert.Error(t, err)
+			}
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
