@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	//meader.APIKey = "tmp"
+	// APIKey := meander.GOOGLE_API_KEY
 	ServerPort := os.Getenv("SERVER_PORT")
 	http.HandleFunc("/journeys", func(w http.ResponseWriter, r *http.Request) {
 		err := respond(w, meander.Journeys)
