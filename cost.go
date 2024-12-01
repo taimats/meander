@@ -1,7 +1,6 @@
 package meander
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -40,15 +39,8 @@ func ParseCost(s string) Cost {
 }
 
 type CostRange struct {
-	From string
-	To   string
-}
-
-func NewCostRange(from string, to string) (*CostRange, error) {
-	if (len([]rune(from))) >= (len([]rune(to))) {
-		return nil, errors.New("fromはtoより少ない$にしてください")
-	}
-	return &CostRange{From: from, To: to}, nil
+	From Cost
+	To   Cost
 }
 
 func (cr *CostRange) String() string {
@@ -57,5 +49,5 @@ func (cr *CostRange) String() string {
 
 func ParseCostRange(s string) *CostRange {
 	seg := strings.Split(s, "...")
-	return &CostRange{seg[0], seg[1]}
+	return &CostRange{ParseCost(seg[0]), ParseCost(seg[1])}
 }

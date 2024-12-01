@@ -43,65 +43,12 @@ func TestParseCost(t *testing.T) {
 	}
 }
 
-func TestNewCostRange(t *testing.T) {
-	//Arange
-	tests := map[string]struct {
-		from    string
-		to      string
-		want    *meander.CostRange
-		wantErr bool
-	}{
-		"正常系": {
-			from:    "$$",
-			to:      "$$$",
-			want:    &meander.CostRange{From: "$$", To: "$$$"},
-			wantErr: false,
-		},
-		"エラー": {
-			from:    "$$$",
-			to:      "$$",
-			want:    nil,
-			wantErr: true,
-		},
-	}
-
-	for n, tt := range tests {
-		t.Run(n, func(t *testing.T) {
-			//Act
-			got, err := meander.NewCostRange(tt.from, tt.to)
-
-			//Assert
-			if tt.wantErr {
-				assert.Error(t, err)
-			}
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
-func TestCostRangeString(t *testing.T) {
-	//Arrange
-	from := "$$"
-	to := "$$$"
-	want := from + "..." + to
-	cr, err := meander.NewCostRange(from, to)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	//Act
-	got := cr.String()
-
-	//Assert
-	assert.Equal(t, want, got)
-}
-
 func TestParseCostRange(t *testing.T) {
 	//Arrange
 	arg := "$$...$$$"
-	want, err := meander.NewCostRange("$$", "$$$")
-	if err != nil {
-		t.Fatal(err)
+	want := &meander.CostRange{
+		From: meander.ParseCost("$$"),
+		To:   meander.ParseCost("$$$"),
 	}
 
 	//Act
