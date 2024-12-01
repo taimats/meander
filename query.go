@@ -1,8 +1,17 @@
 package meander
 
-import "os"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+)
 
-var GOOGLE_API_KEY = os.Getenv("GOOGLE_API_KEY")
+var (
+	GOOGLE_API_KEY     = os.Getenv("GOOGLE_API_KEY")
+	URL_FOR_GOOGLE_API = os.Getenv("URL_FOR_GOOGLE_API")
+)
 
 type Place struct {
 	*googleGeometry `json:"geometry"`
@@ -39,4 +48,39 @@ func (p *Place) Public() any {
 		"lat":      p.Lat,
 		"lng":      p.Lng,
 	}
+}
+
+type Query struct {
+	Lat          float64
+	Lng          float64
+	Journey      []string
+	Radius       int
+	CostRangeStr string
+}
+
+func (q *Query) find(types string) (*googleResponse, error) {
+	//GoogleのAPIサーバーに対してリクエストを行う
+	vals := make(url.Values)
+	vals.Set("location", fmt.Sprintf("%g,%g", q.Lat, q.Lng))
+	vals.Set("radius", fmt.Sprintf("%d", q.Radius))
+	vals.Set("types", types)
+	vals.Set("key", GOOGLE_API_KEY)
+	if len(q.CostRangeStr) > 0 {
+		r := ParseCostRange(q.CostRangeStr)
+		vals.Set("minprice", fmt.Sprintf("%d", int(r.From)-1))
+		vals.Set("maxprice", fmt.Sprintf("%d", int(r.To)-1))
+	}
+
+	res, err := http.Get(URL_FOR_GOOGLE_API + "?" + vals.Encode())
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var gr googleResponse
+	if err := json.NewDecoder(res.Body).Decode(&gr); err != nil {
+		return nil, err
+	}
+
+	return &gr, nil
 }
