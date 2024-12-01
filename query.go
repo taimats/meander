@@ -3,14 +3,19 @@ package meander
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"sync"
+	"time"
 )
 
 var (
-	GOOGLE_API_KEY     = os.Getenv("GOOGLE_API_KEY")
-	URL_FOR_GOOGLE_API = os.Getenv("URL_FOR_GOOGLE_API")
+	GOOGLE_API_KEY         = os.Getenv("GOOGLE_API_KEY")
+	URL_GOOGLE_API_JOURNEY = os.Getenv("URL_GOOGLE_API_JOURNEY")
+	URL_GOOGLE_API_PHOTO   = os.Getenv("URL_GOOGLE_API_PHOTO")
 )
 
 type Place struct {
@@ -71,7 +76,7 @@ func (q *Query) find(types string) (*googleResponse, error) {
 		vals.Set("maxprice", fmt.Sprintf("%d", int(r.To)-1))
 	}
 
-	res, err := http.Get(URL_FOR_GOOGLE_API + "?" + vals.Encode())
+	res, err := http.Get(URL_GOOGLE_API_JOURNEY + "?" + vals.Encode())
 	if err != nil {
 		return nil, err
 	}
@@ -83,4 +88,46 @@ func (q *Query) find(types string) (*googleResponse, error) {
 	}
 
 	return &gr, nil
+}
+
+func (q *Query) Run() any {
+	randgen := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var w sync.WaitGroup
+	var l sync.Mutex
+	places := make([]any, len(q.Journey))
+
+	for i, r := range q.Journey {
+		w.Add(1)
+		go func(types string, i int) {
+			defer w.Done()
+
+			res, err := q.find(types)
+			if err != nil {
+				log.Println("施設の検索に失敗しました. error:", err)
+				return
+			}
+
+			if len(res.Results) == 0 {
+				log.Println("施設が見つかりませんでした. types:", types)
+				return
+			}
+
+			//別途、写真用のGoogleAPIサーバにリクエストをする
+			for _, result := range res.Results {
+				for _, photo := range result.Photos {
+					photo.URL = URL_GOOGLE_API_PHOTO +
+						"maxwidth=1000&photoreference" + photo.PhotoRef +
+						"&key" + GOOGLE_API_KEY
+				}
+			}
+
+			randI := randgen.Intn(len(res.Results))
+			l.Lock()
+			places[i] = res.Results[randI]
+			l.Unlock()
+		}(r, i)
+	}
+
+	w.Wait()
+	return places
 }
