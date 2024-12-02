@@ -90,7 +90,7 @@ func (q *Query) find(types string) (*googleResponse, error) {
 	return &gr, nil
 }
 
-func (q *Query) Run() any {
+func (q *Query) Run() []any {
 	randgen := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var w sync.WaitGroup
 	var l sync.Mutex
